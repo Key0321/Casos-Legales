@@ -133,22 +133,16 @@ public class ProcesoLegalControlador {
         if (usuario == null) {
             return "redirect:/login";
         }
-        model.addAttribute("procesoLegal", new ProcesoLegal());
+
+        ProcesoLegal procesoLegal = new ProcesoLegal();
+        // Do not set numeroProceso here; it will be generated in the POST method
+
+        model.addAttribute("procesoLegal", procesoLegal);
         model.addAttribute("clientes", clienteServicio.listarTodos());
         model.addAttribute("estados", estadoProcesoServicio.listarTodos());
         model.addAttribute("usuarios", usuarioServicio.listarTodos());
         return "admin".equalsIgnoreCase(usuario.getRol().getNombre()) ?
                "admin/gestion_procesos_legales_agregar" : "abogado/inicio_agregar";
-    }
-
-    @GetMapping("/listar_procesos_legales")
-    @ResponseBody
-    public List<Object[]> listarProcesos(HttpSession session) {
-        Usuario usuario = (Usuario) session.getAttribute("usuario");
-        if (usuario == null) {
-            return List.of();
-        }
-        return procesoServicio.listarProcesoLegalMinimo();
     }
 
     @PostMapping({"/abogado/guardar_proceso_legal", "/admin/guardar_proceso_legal"})
@@ -166,6 +160,8 @@ public class ProcesoLegalControlador {
             LocalDateTime fechaActual = LocalDateTime.now();
             procesoLegal.setCreadoPor(usuario);
             procesoLegal.setFechaCreacion(fechaActual);
+            // Generate and set the case number just before saving
+            procesoLegal.setNumeroProceso(procesoServicio.generateCaseNumber());
             procesoLegal = procesoServicio.guardar(procesoLegal);
 
             if (abogadosSeleccionados != null) {
@@ -183,6 +179,7 @@ public class ProcesoLegalControlador {
                 }
             }
             redirectAttributes.addFlashAttribute("exito", true);
+            redirectAttributes.addFlashAttribute("casoCreado", true);
             return "admin".equalsIgnoreCase(usuario.getRol().getNombre()) ?
                    "redirect:/admin/gestion_procesos_legales_agregar" : "redirect:/abogado/inicio_agregar";
         } catch (Exception e) {
@@ -191,6 +188,17 @@ public class ProcesoLegalControlador {
                    "redirect:/admin/gestion_procesos_legales_agregar" : "redirect:/abogado/inicio_agregar";
         }
     }
+
+    @GetMapping("/listar_procesos_legales")
+    @ResponseBody
+    public List<Object[]> listarProcesos(HttpSession session) {
+        Usuario usuario = (Usuario) session.getAttribute("usuario");
+        if (usuario == null) {
+            return List.of();
+        }
+        return procesoServicio.listarProcesoLegalMinimo();
+    }
+
 
     @GetMapping({"/abogado/proceso_legal_contenido/{id}", "/cliente/proceso_legal_contenido/{id}"})
     public String mostrarDetalleCaso(@PathVariable Long id, HttpSession session, Model model) {

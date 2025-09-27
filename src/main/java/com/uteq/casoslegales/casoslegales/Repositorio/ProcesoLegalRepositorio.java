@@ -14,6 +14,8 @@ public interface ProcesoLegalRepositorio extends JpaRepository<ProcesoLegal, Lon
        "JOIN p.cliente c")
     List<Object[]> listarProcesosSoloCampos();
 
+    long countByNumeroProcesoStartingWith(String prefix);
+
     Optional<ProcesoLegal> findByIdAndEliminadoPorIsNull(Long id);
 
 

@@ -98,11 +98,6 @@
     <form class="formulario-caso" th:action="@{/admin/guardar_proceso_legal}" th:object="${procesoLegal}" method="post">
 
       <div class="form-grupo">
-        <label>Número de proceso</label>
-        <input type="text" th:field="*{numeroProceso}" required />
-      </div>
-
-      <div class="form-grupo">
         <label>Cliente</label>
         <select th:field="*{cliente.id}" required>
           <option value="">Seleccione un cliente</option>

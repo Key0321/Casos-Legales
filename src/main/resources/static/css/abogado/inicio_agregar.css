@@ -1,62 +1,8 @@
-body {
-  margin: 0;
-  font-family: 'Inter', sans-serif;
-  background-color: var(--color-fondo);
-  color: #333;
-}
-.menu {
-  position: fixed;
-  top: 0;
-  left: 0;
-  height: 100vh;
-  width: 80px;
-  background-color: var(--color-secundario);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-  /*border-radius: 0px 25px 25px 0px;*/
-}
-
-.menu-logo{
-  padding: 5px;
-  margin-top: 20px;
-}
-
-.menu-logo img {
-  width: 100%;
-  height: 100%;
-  cursor: pointer;
-}
-
-.menu-item {
-  width: 45px;
-  height: 45px;
-  padding: 10px;
-  box-sizing: border-box; 
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 10px;
-  transition: background-color 0.3s ease;
-  cursor: pointer;
-}
-
-.menu-item:hover {
-  background-color: var(--color-primario);
-}
-
-.menu-item img{
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  display: block;
-}
-
 .div-contenido {
   margin-left: 80px;
   padding: 2rem;
   background-color: var(--color-fondo);
+  overflow-y: auto;
 }
 
 .formulario-caso {

@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.annotation.Propagation;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -35,6 +36,18 @@ public class ProcesoLegalServicio {
     @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)
     public List<Object[]> listarProcesoLegalMinimo() {
         return procesoRepo.listarProcesosSoloCampos();
+    }
+
+    public long countByYearAndMonth(String year, String monthLetter) {
+        return procesoRepo.countByNumeroProcesoStartingWith("CAS-" + year + "-" + monthLetter);
+    }
+
+    public String generateCaseNumber() {
+        LocalDateTime now = LocalDateTime.now();
+        String year = now.format(DateTimeFormatter.ofPattern("yyyy"));
+        char monthLetter = (char) ('A' + now.getMonthValue() - 1);
+        long caseCount = countByYearAndMonth(year, String.valueOf(monthLetter));
+        return String.format("CAS-%s-%s%03d", year, monthLetter, caseCount + 1);
     }
 
     @Transactional(rollbackFor = Exception.class)
