@@ -156,11 +156,21 @@ public class UsuarioControlador {
     })
     public String mostrarFormularioNuevoUsuario(HttpSession session, Model model, HttpServletRequest request) {
         model.addAttribute("usuario", new Usuario());
-        model.addAttribute("roles", rolServicio.listarTodos());
 
         Usuario usuarioSesion = (Usuario) session.getAttribute("usuario");
         if (usuarioSesion == null) {
             return "redirect:/login";
+        }
+
+        // Filtrar roles dependiendo del rol del usuario en sesión
+        if ("abogado".equalsIgnoreCase(usuarioSesion.getRol().getNombre())) {
+            // Excluir rol admin si el que entra es abogado
+            List<Rol> rolesSinAdmin = rolServicio.listarTodos().stream()
+                    .filter(r -> !"admin".equalsIgnoreCase(r.getNombre()))
+                    .toList();
+            model.addAttribute("roles", rolesSinAdmin);
+        } else {
+            model.addAttribute("roles", rolServicio.listarTodos());
         }
 
         String uri = request.getRequestURI();
