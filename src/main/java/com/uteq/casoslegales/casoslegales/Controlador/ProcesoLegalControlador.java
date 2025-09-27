@@ -523,6 +523,55 @@ public class ProcesoLegalControlador {
         }
     }
 
+    @PostMapping("/abogado/subir-documento-chat")
+    public ResponseEntity<?> subirDocumentoChat(@RequestParam("archivo") MultipartFile archivo,
+                                               @RequestParam String nombre,
+                                               @RequestParam String tipoDocumento,
+                                               @RequestParam Long procesoId,
+                                               @RequestParam Long emisorId,
+                                               HttpSession session) {
+        Usuario usuario = (Usuario) session.getAttribute("usuario");
+        if (usuario == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Usuario no autenticado");
+        }
+        if (!"admin".equalsIgnoreCase(usuario.getRol().getNombre()) &&
+            !procesoUsuarioServicio.estaUsuarioInvolucrado(procesoId, usuario.getId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Acceso denegado");
+        }
+        Optional<ProcesoLegal> procesoOpt = procesoServicio.obtenerPorId(procesoId);
+        if (procesoOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Proceso no encontrado");
+        }
+        try {
+            String ruta = documentoServicio.guardarArchivo(archivo);
+            Documento doc = new Documento();
+            doc.setProceso(procesoOpt.get());
+            doc.setNombre(nombre.isEmpty() ? archivo.getOriginalFilename() : nombre);
+            doc.setRutaArchivo(ruta);
+            doc.setTipoDocumento(tipoDocumento);
+            doc.setPalabrasClave("clave chat");
+            doc.setClaveCifrado("20");
+            LocalDateTime now = LocalDateTime.now();
+            doc.setAnio(now.getYear());
+            doc.setMes(now.getMonthValue());
+            doc.setCreadoPor(usuario);
+            doc.setFechaCreacion(now);
+            documentoServicio.guardar(doc);
+
+            Map<String, String> contenidoMap = new HashMap<>();
+            contenidoMap.put("rutaArchivo", ruta);
+            contenidoMap.put("nombre", doc.getNombre());
+            String contenido = "{\"rutaArchivo\":\"" + ruta + "\",\"nombre\":\"" + doc.getNombre() + "\"}";
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("contenido", contenido);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("Error al subir documento para chat: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al subir documento: " + e.getMessage());
+        }
+    }
+
     @PostMapping("/abogado/actualizar-documento/{id}")
     public ResponseEntity<?> actualizarDocumento(@PathVariable Long id,
                                                  @RequestParam(required = false) MultipartFile archivo,

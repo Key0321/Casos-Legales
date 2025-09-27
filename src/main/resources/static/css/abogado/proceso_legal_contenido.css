@@ -1012,3 +1012,32 @@
   color: white;
   border-color: #007bff;
 }
+
+.documento-mensaje {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    border-radius: 4px;
+    background-color: #f0f4f8;
+}
+
+.documento-mensaje i {
+    color: #1976D2;
+    font-size: 18px;
+}
+
+.documento-mensaje a {
+    color: #1976D2;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.documento-mensaje a:hover {
+    text-decoration: underline;
+}
+
+.documento-mensaje .tipo-documento {
+    font-size: 12px;
+    color: #666;
+}

@@ -1,4 +1,4 @@
-html<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8" />
@@ -41,7 +41,7 @@ html<!DOCTYPE html>
         </div>
         <div class="menu-item item-perfil">
             <span th:text="${#strings.substring(usuarioActual.nombre, 0, 1) + #strings.substring(usuarioActual.apellido, 0, 1)}">US</span>
-          </div>
+        </div>
       </div>
 
       <div class="menu-perfil" id="menuPerfil">
@@ -97,7 +97,23 @@ html<!DOCTYPE html>
                           <span class="emisor" th:text="${mensaje.emisor.nombre + ' ' + mensaje.emisor.apellido}">Emisor</span>
                           <span class="hora-mensaje" th:text="${#temporals.format(mensaje.fechaEnvio, 'HH:mm')}">14:30</span>
                       </div>
-                      <p th:text="${mensaje.contenido}">Contenido del mensaje...</p>
+                      <div th:if="${mensaje.tipoContenido == 'TEXTO'}">
+                          <p th:text="${mensaje.contenido}">Contenido del mensaje...</p>
+                      </div>
+                      <div th:if="${mensaje.tipoContenido == 'DOCUMENTO'}">
+                          <div class="documento-mensaje">
+                              <i class="fas fa-file-alt"></i>
+                              <a href="javascript:void(0)"
+                                 th:data-ruta="${mensaje.contenido}"
+                                 onclick="verDocumento(this.getAttribute('data-ruta'))"
+                                 th:text="${#strings.contains(mensaje.contenido, '/') 
+                                             ? #strings.arraySplit(mensaje.contenido, '/')[#strings.arraySplit(mensaje.contenido, '/').length - 1] 
+                                             : 'Documento'}">
+                                  documento.pdf
+                              </a>
+                              <span class="tipo-documento">Documento compartido</span>
+                          </div>
+                      </div>
                   </div>
               </div>
           </div>
@@ -106,14 +122,14 @@ html<!DOCTYPE html>
             <div class="acciones-conversacion">
               <button class="btn-accion" title="Adjuntar documento" aria-label="Adjuntar">
                 <i class="fas fa-paperclip"></i>
-                <input type="file" class="input-archivo" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png" />
+                <input type="file" class="input-archivo" id="chat-file-input" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png" />
               </button>
               <button class="btn-accion" title="Emoji" aria-label="Emoji">
                 <i class="far fa-smile"></i>
               </button>
             </div>
-            <input type="text" placeholder="Escribe un mensaje..." class="input-mensaje-conversacion" />
-            <button class="btn-enviar-mensaje" aria-label="Enviar">
+            <input type="text" placeholder="Escribe un mensaje..." class="input-mensaje-conversacion" id="chat-message-input" />
+            <button class="btn-enviar-mensaje" aria-label="Enviar" id="chat-send-button">
               <i class="fas fa-paper-plane"></i>
             </button>
           </div>
@@ -213,18 +229,17 @@ html<!DOCTYPE html>
                   <div class="item-documento" th:each="doc : ${grupo.value}">
                     <i class="fas fa-file-pdf"></i>
                     <div class="info-documento">
-                      <a th:href="@{${doc.rutaArchivo}}" th:text="${doc.nombre}">documento.pdf</a>
+                      <a href="javascript:void(0)"
+                         th:data-ruta="${doc.rutaArchivo}"
+                         onclick="verDocumento(this.getAttribute('data-ruta'))"
+                         th:text="${doc.nombre}">
+                         documento.pdf
+                      </a>
                       <span th:text="${#temporals.format(doc.fechaCreacion, 'dd/MM/yyyy')}">05/11/2023</span>
                     </div>
                     <div class="acciones-documento">
                       <button class="btn-descargar" title="Descargar" aria-label="Descargar">
                         <i class="fas fa-download"></i>
-                      </button>
-                      <button class="btn-editar-documento" th:attr="data-doc-id=${doc.id}" title="Editar">
-                        <i class="fas fa-edit"></i>
-                      </button>
-                      <button class="btn-eliminar-documento" th:attr="data-doc-id=${doc.id}" title="Eliminar">
-                        <i class="fas fa-trash"></i>
                       </button>
                     </div>
                   </div>
@@ -236,7 +251,7 @@ html<!DOCTYPE html>
       </div>
     </div>
 
-    <!-- Modal para subir/editar documento -->
+    <!-- Modal para subir documento -->
     <div id="modal-documento" class="modal">
       <div class="contenido-modal">
         <div class="cabecera-modal">
@@ -245,10 +260,9 @@ html<!DOCTYPE html>
         </div>
         <div class="cuerpo-modal">
           <form id="form-documento" method="post" enctype="multipart/form-data" th:action="@{/abogado/subir-documento/{id}(id=${proceso.id})}">
-            <input type="hidden" id="doc-id" name="id">
             <div class="form-grupo">
-              <label for="archivo">Seleccionar Archivo (opcional para editar):</label>
-              <input type="file" id="archivo" name="archivo" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">
+              <label for="archivo">Seleccionar Archivo:</label>
+              <input type="file" id="archivo" name="archivo" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png" required>
             </div>
             <div class="form-grupo">
               <label for="nombre">Nombre del Documento:</label>
@@ -277,7 +291,7 @@ html<!DOCTYPE html>
     </div>
 
     <input type="hidden" id="proceso-id" th:value="${proceso.id}">
-    <input type="hidden" id="id-usuario" th:value="${usuarioActual.id}">
+    <input type="hidden" id="id-usuario" th:value="${usuarioActual.id}" th:data-nombre="${usuarioActual.nombre + ' ' + usuarioActual.apellido}">
 
     <script>
 document.addEventListener("DOMContentLoaded", function() {
@@ -303,9 +317,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     const colores = ["#D32F2F", "#1976D2", "#388E3C", "#F57C00", "#7B1FA2", "#0288D1", "#C2185B", "#009688", "#FBC02D", "#512DA8"];
     document.querySelectorAll(".avatar-persona").forEach(avatar => {
-        if (!avatar.classList.contains('agregar-nuevo')) {
-            avatar.style.backgroundColor = colores[Math.floor(Math.random() * colores.length)];
-        }
+        avatar.style.backgroundColor = colores[Math.floor(Math.random() * colores.length)];
     });
 
     // Alternar visibilidad de secciones (solo lectura para cliente)
@@ -320,7 +332,7 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     });
 
-    // Función para mostrar mensajes
+    // Función para mostrar mensajes de notificación
     function mostrarMensaje(mensaje, tipo) {
         const messageDiv = document.createElement('div');
         messageDiv.className = `mensaje-aviso ${tipo}`;
@@ -348,6 +360,9 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
     // Recargar eventos (solo lectura)
+    let eventosConEstado = [];
+    let mostrarTodos = false;
+
     function recargarEventos() {
         const procesoId = parseInt(document.getElementById('proceso-id').value, 10);
         fetch(`/abogado/eventos-proceso/${procesoId}`)
@@ -371,17 +386,19 @@ document.addEventListener("DOMContentLoaded", function() {
         const lista = document.getElementById('con-eventos');
         const sinEventos = document.getElementById('sin-eventos');
         const btnAntiguos = document.getElementById('ver-eventos-antiguos');
+        const btnActuales = document.getElementById('ver-eventos-actuales');
         lista.innerHTML = '';
         sinEventos.style.display = 'none';
 
         let eventosFiltrados = [...eventosConEstado].sort((a, b) => b.fechaEvento - a.fechaEvento);
-        let mostrarTodos = false;
 
         if (!mostrarTodos) {
             eventosFiltrados = eventosFiltrados.filter(e => e.estado === 'pendiente');
             btnAntiguos.style.display = eventosConEstado.some(e => e.estado === 'terminado') ? 'block' : 'none';
+            btnActuales.style.display = 'none';
         } else {
             btnAntiguos.style.display = 'none';
+            btnActuales.style.display = 'block';
         }
 
         if (eventosFiltrados.length === 0) {
@@ -411,37 +428,12 @@ document.addEventListener("DOMContentLoaded", function() {
         actualizarListaEventos();
     });
 
-    recargarEventos();
-
-    // Event delegation for edit and delete documents
-    document.querySelector('.acordeon-documentos').addEventListener('click', (e) => {
-        if (e.target.closest('.btn-editar-documento')) {
-            const id = e.target.closest('.btn-editar-documento').dataset.docId;
-            const doc = documentosConEstado.find(d => d.id == id);
-            if (doc) {
-                document.getElementById('titulo-modal-documento').textContent = 'Editar Documento';
-                document.getElementById('form-documento').action = `/abogado/actualizar-documento/${id}`;
-                document.getElementById('doc-id').value = doc.id;
-                document.getElementById('nombre').value = doc.nombre;
-                document.getElementById('tipo-documento').value = doc.tipoDocumento;
-                document.getElementById('archivo').required = false; // Archivo opcional para editar
-                document.getElementById('modal-documento').style.display = 'flex';
-            }
-        } else if (e.target.closest('.btn-eliminar-documento')) {
-            const id = e.target.closest('.btn-eliminar-documento').dataset.docId;
-            if (confirm('¿Está seguro de eliminar este documento?')) {
-                fetch(`/abogado/eliminar-documento/${id}`, { method: 'DELETE' })
-                    .then(response => {
-                        if (response.ok) {
-                            location.reload();
-                            mostrarMensaje('Documento eliminado', 'success');
-                        } else {
-                            mostrarMensaje('Error al eliminar documento', 'error');
-                        }
-                    });
-            }
-        }
+    document.getElementById('ver-eventos-actuales').addEventListener('click', () => {
+        mostrarTodos = false;
+        actualizarListaEventos();
     });
+
+    recargarEventos();
 
     // Para setear nombre de documento al seleccionar archivo
     document.getElementById('archivo').addEventListener('change', (e) => {
@@ -456,7 +448,6 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById('titulo-modal-documento').textContent = 'Subir Documento';
         document.getElementById('form-documento').action = `/abogado/subir-documento/${procesoId}`;
         document.getElementById('form-documento').reset();
-        document.getElementById('doc-id').value = '';
         document.getElementById('archivo').required = true;
         document.getElementById('modal-documento').style.display = 'flex';
     });
@@ -476,10 +467,10 @@ document.addEventListener("DOMContentLoaded", function() {
                 .then(response => {
                     if (response.ok) {
                         location.reload();
-                        mostrarMensaje('Guardado correctamente', 'success');
+                        mostrarMensaje('Documento subido correctamente', 'success');
                         form.closest('.modal').style.display = 'none';
                     } else {
-                        mostrarMensaje('Error al guardar', 'error');
+                        mostrarMensaje('Error al subir documento', 'error');
                     }
                 })
                 .catch(() => mostrarMensaje('Error de conexión', 'error'));
@@ -493,6 +484,10 @@ const usuarioActualId = parseInt(document.getElementById('id-usuario').value, 10
 let lastMessageId = 0;
 let pendingMessages = new Set();
 
+function verDocumento(ruta) {
+    window.open('/ver' + ruta, '_blank');
+}
+
 function connectWebSocket() {
     console.log('Intentando conectar WebSocket para proceso:', procesoId);
     const socket = new SockJS('/ws-chat', null, { timeout: 15000 });
@@ -500,21 +495,21 @@ function connectWebSocket() {
 
     stompClient.connect({}, function(frame) {
         console.log('Conectado al WebSocket: ' + frame);
-        document.getElementById('connection-status') ? 
-            document.getElementById('connection-status').textContent = 'Conectado' : 
-            console.warn('Elemento connection-status no encontrado');
-        document.getElementById('connection-status') ? 
-            document.getElementById('connection-status').style.color = 'green' : null;
-
         const topic = '/topic/chat.' + procesoId;
         console.log('Suscribiendo a:', topic);
         stompClient.subscribe(topic, function(message) {
             console.log('Mensaje recibido en ' + topic + ':', message.body);
             try {
                 const chatMessage = JSON.parse(message.body);
-                mostrarMensaje(chatMessage);
-                if (chatMessage.id && chatMessage.id > lastMessageId) {
-                    lastMessageId = chatMessage.id;
+                const messageKey = `${chatMessage.contenido}|${chatMessage.fechaEnvio}|${chatMessage.emisorId}`;
+                if (!pendingMessages.has(messageKey)) {
+                    mostrarMensaje(chatMessage);
+                    if (chatMessage.id && chatMessage.id > lastMessageId) {
+                        lastMessageId = chatMessage.id;
+                    }
+                } else {
+                    console.log('Mensaje pendiente detectado, eliminando de pendingMessages:', messageKey);
+                    pendingMessages.delete(messageKey);
                 }
             } catch (e) {
                 console.error('Error al parsear mensaje:', e, 'Raw body:', message.body);
@@ -533,11 +528,6 @@ function connectWebSocket() {
         stompClient.send("/app/chat.addUser", {}, JSON.stringify(joinMessage));
     }, function(error) {
         console.error('Error de conexión WebSocket:', error);
-        document.getElementById('connection-status') ? 
-            document.getElementById('connection-status').textContent = 'Desconectado - Reintentando...' : 
-            console.warn('Elemento connection-status no encontrado');
-        document.getElementById('connection-status') ? 
-            document.getElementById('connection-status').style.color = 'red' : null;
         setTimeout(connectWebSocket, 5000);
     });
 }
@@ -548,15 +538,10 @@ function disconnectWebSocket() {
             console.log("Desconectado del WebSocket");
         });
     }
-    document.getElementById('connection-status') ? 
-        document.getElementById('connection-status').textContent = 'Desconectado' : 
-        console.warn('Elemento connection-status no encontrado');
-    document.getElementById('connection-status') ? 
-        document.getElementById('connection-status').style.color = 'red' : null;
 }
 
-function sendMessage() {
-    const messageInput = document.querySelector('.input-mensaje-conversacion');
+function sendTextMessage() {
+    const messageInput = document.getElementById('chat-message-input');
     const messageContent = messageInput.value.trim();
 
     if (messageContent && stompClient && stompClient.connected) {
@@ -568,12 +553,10 @@ function sendMessage() {
             emisorNombre: document.getElementById('id-usuario').dataset.nombre || 'Usuario ' + usuarioActualId,
             fechaEnvio: new Date().toISOString()
         };
-        console.log('Enviando mensaje:', chatMessage);
+        console.log('Enviando mensaje de texto:', chatMessage);
         
         const messageKey = `${chatMessage.contenido}|${chatMessage.fechaEnvio}|${chatMessage.emisorId}`;
         pendingMessages.add(messageKey);
-        
-        mostrarMensaje(chatMessage);
         
         stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(chatMessage));
         messageInput.value = '';
@@ -583,12 +566,83 @@ function sendMessage() {
             stompClient: !!stompClient,
             conectado: stompClient ? stompClient.connected : false
         });
+        mostrarMensaje('No se puede enviar el mensaje. Verifica la conexión.', 'error');
     }
 }
 
+function sendDocumentMessage() {
+    const fileInput = document.getElementById('chat-file-input');
+    const file = fileInput.files[0];
+    if (!file) {
+        console.error('No se seleccionó ningún archivo');
+        mostrarMensaje('Por favor, selecciona un archivo para enviar.', 'error');
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('archivo', file);
+    formData.append('nombre', file.name);
+    formData.append('tipoDocumento', 'CHAT_DOCUMENT');
+    formData.append('procesoId', procesoId);
+    formData.append('emisorId', usuarioActualId);
+
+    fetch('/abogado/subir-documento-chat', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        console.log('Respuesta de /abogado/subir-documento-chat:', response);
+        if (!response.ok) {
+            throw new Error('Error al subir documento: ' + response.statusText);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Datos recibidos de /abogado/subir-documento-chat:', data);
+        let rutaArchivo;
+        try {
+            const contenido = typeof data.contenido === 'string' ? JSON.parse(data.contenido) : data.contenido;
+            rutaArchivo = contenido.rutaArchivo;
+            if (!rutaArchivo) {
+                throw new Error('rutaArchivo no encontrada en la respuesta');
+            }
+        } catch (e) {
+            console.error('Error al parsear respuesta del servidor:', e);
+            throw new Error('Formato de respuesta inválido: ' + e.message);
+        }
+
+        const chatMessage = {
+            contenido: rutaArchivo,
+            procesoId: procesoId,
+            tipoContenido: 'DOCUMENTO',
+            emisorId: usuarioActualId,
+            emisorNombre: document.getElementById('id-usuario').dataset.nombre || 'Usuario ' + usuarioActualId,
+            fechaEnvio: new Date().toISOString()
+        };
+        console.log('Enviando mensaje de documento:', chatMessage);
+
+        const messageKey = `${chatMessage.contenido}|${chatMessage.fechaEnvio}|${chatMessage.emisorId}`;
+        pendingMessages.add(messageKey);
+
+        if (stompClient && stompClient.connected) {
+            stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(chatMessage));
+            console.log('Mensaje enviado a /app/chat.sendMessage:', chatMessage);
+        } else {
+            console.error('WebSocket no está conectado');
+            mostrarMensaje('No se pudo enviar el documento porque la conexión WebSocket no está activa.', 'error');
+        }
+
+        fileInput.value = ''; // Limpiar input
+    })
+    .catch(error => {
+        console.error('Error al subir documento:', error);
+        mostrarMensaje('Error al subir documento: ' + error.message, 'error');
+    });
+}
+
 function mostrarMensaje(message) {
-    // Ignorar mensajes de tipo CONEXION o con contenido null/vacío
-    if (message.tipo === 'CONEXION' || !message.contenido || message.contenido.trim() === '') {
+    // Ignorar mensajes de tipo CONEXION, con contenido null/vacío o de error
+    if (message.tipo === 'CONEXION' || !message.contenido || message.contenido.trim() === '' || message.tipo === 'error') {
         console.log('Ignorando mensaje:', message);
         return;
     }
@@ -610,7 +664,7 @@ function mostrarMensaje(message) {
     } else {
         const messageKey = `${message.contenido}|${message.fechaEnvio}|${message.emisorId}`;
         if (pendingMessages.has(messageKey)) {
-            console.log('Mensaje pendiente detectado, no se agrega:', message);
+            console.log('Mensaje pendiente detectado, eliminando de pendingMessages:', messageKey);
             pendingMessages.delete(messageKey);
             return;
         }
@@ -633,13 +687,29 @@ function mostrarMensaje(message) {
 
     const emisorNombre = message.emisorNombre || (message.emisor ? message.emisor.nombre + ' ' + message.emisor.apellido : 'Sistema');
 
+    let contenidoHtml = '';
+    if (message.tipoContenido === 'TEXTO') {
+        contenidoHtml = `<p>${message.contenido}</p>`;
+    } else if (message.tipoContenido === 'DOCUMENTO') {
+        const nombreArchivo = message.contenido.includes('/') 
+            ? message.contenido.split('/').pop() 
+            : 'Documento';
+        contenidoHtml = `
+            <div class="documento-mensaje">
+                <i class="fas fa-file-alt"></i>
+                <a href="javascript:void(0)" onclick="verDocumento('${message.contenido}')" target="_blank">${nombreArchivo}</a>
+                <span class="tipo-documento">Documento compartido</span>
+            </div>
+        `;
+    }
+
     messageElement.innerHTML = `
         <div class="contenido-mensaje">
             <div class="superior-mensaje">
                 <span class="emisor">${emisorNombre}</span>
                 <span class="hora-mensaje">${horaFormateada}</span>
             </div>
-            <p>${message.contenido}</p>
+            ${contenidoHtml}
         </div>
     `;
     messageElement.dataset.fecha = fechaMensaje.toISOString();
@@ -693,20 +763,29 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(connectWebSocket, 1000);
     setInterval(pollMessages, 10000);
 
-    const btnEnviar = document.querySelector('.btn-enviar-mensaje');
+    const btnEnviar = document.getElementById('chat-send-button');
     if (btnEnviar) {
         btnEnviar.addEventListener('click', function(e) {
             e.preventDefault();
-            sendMessage();
+            sendTextMessage();
         });
     }
 
-    const inputMensaje = document.querySelector('.input-mensaje-conversacion');
+    const inputMensaje = document.getElementById('chat-message-input');
     if (inputMensaje) {
         inputMensaje.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
-                sendMessage();
+                sendTextMessage();
+            }
+        });
+    }
+
+    const fileInput = document.getElementById('chat-file-input');
+    if (fileInput) {
+        fileInput.addEventListener('change', function() {
+            if (this.files.length > 0) {
+                sendDocumentMessage();
             }
         });
     }

@@ -93,7 +93,7 @@ public class ChatMensajeControlador {
             mensaje.setChat(chat);
             mensaje.setEmisor(usuario);
             mensaje.setContenido(chatMensajeDto.getContenido());
-            mensaje.setTipoContenido("TEXTO");
+            mensaje.setTipoContenido(chatMensajeDto.getTipoContenido() != null ? chatMensajeDto.getTipoContenido() : "TEXTO");
             mensaje.setFechaEnvio(LocalDateTime.now());
             mensaje.setCreadoPor(usuario);
             mensaje.setFechaCreacion(LocalDateTime.now());
@@ -188,10 +188,10 @@ public class ChatMensajeControlador {
         ChatMensajeDto dto = new ChatMensajeDto();
         dto.setId(mensaje.getId());
         dto.setContenido(mensaje.getContenido());
+        dto.setTipoContenido(mensaje.getTipoContenido());
         dto.setEmisorId(mensaje.getEmisor().getId());
         dto.setEmisorNombre(mensaje.getEmisor().getNombre() + " " + mensaje.getEmisor().getApellido());
         dto.setFechaEnvio(mensaje.getFechaEnvio().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
-        dto.setTipoContenido(mensaje.getTipoContenido());
         dto.setChatId(mensaje.getChat().getId());
         return dto;
     }
