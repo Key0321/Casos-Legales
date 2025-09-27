@@ -11,10 +11,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.*;
 
 import com.uteq.casoslegales.casoslegales.Modelo.Acceso;
@@ -57,23 +53,78 @@ public class LoginControl {
     // Verificar credenciales y enviar código de verificación
     @PostMapping("/api/login/verificar-credenciales")
     @ResponseBody
-    public ResponseEntity<Map<String, Object>> verificarCredenciales(@RequestBody Map<String, String> request) {
+    public ResponseEntity<Map<String, Object>> verificarCredenciales(@RequestBody Map<String, String> request,
+                                                                    HttpSession session,
+                                                                    HttpServletRequest httpRequest) {
         String correo = request.get("correo");
         String contrasenia = request.get("contrasenia");
 
-        Optional<Usuario> usuario = usuarioService.autenticar(correo, contrasenia);
+        Optional<Usuario> usuarioOpt = usuarioService.autenticar(correo, contrasenia);
         Map<String, Object> response = new HashMap<>();
 
-        if (usuario.isPresent()) {
-            String codigo = generarCodigo();
-            codigosVerificacion.put(correo, codigo);
+        if (usuarioOpt.isPresent()) {
+            Usuario user = usuarioOpt.get();
+            String ipActual = httpRequest.getRemoteAddr(); // Obtener IP actual
 
-            try {
-                enviarCorreoVerificacion(correo, codigo);
-                response.put("success", true);
-            } catch (MessagingException e) {
-                response.put("success", false);
-                response.put("message", "Error al enviar el código de verificación");
+            // Consultar último acceso del usuario
+            Acceso lastAcceso = accesoService.obtenerUltimoAccesoPorUsuarioId(user.getId());
+            boolean esIpConfiable = lastAcceso != null && ipActual.equals(lastAcceso.getIpOrigen());
+
+            if (esIpConfiable) {
+                // IP confiada: Login directo (sin código)
+                try {
+                    // Crear acceso
+                    Acceso acceso = new Acceso();
+                    acceso.setUsuario(user);
+                    acceso.setFechaIngreso(LocalDateTime.now());
+                    acceso.setIpOrigen(ipActual);
+                    acceso.setCreadoPor(user);
+                    acceso.setFechaCreacion(LocalDateTime.now());
+                    accesoService.guardar(acceso);
+                    session.setAttribute("accesoId", acceso.getId());
+
+                    // Settear sesión
+                    session.setAttribute("usuario", user);
+                    session.setAttribute("rol", user.getRol().getNombre());
+
+                    // Determinar redirect
+                    String redirectUrl;
+                    switch (user.getRol().getNombre().toLowerCase()) {
+                        case "abogado":
+                            redirectUrl = "/abogado/inicio";
+                            break;
+                        case "cliente":
+                            redirectUrl = "/cliente/inicio";
+                            break;
+                        case "admin":
+                            redirectUrl = "/admin/gestion_procesos_legales";
+                            break;
+                        default:
+                            response.put("success", false);
+                            response.put("message", "Rol no reconocido");
+                            return ResponseEntity.ok(response);
+                    }
+                    response.put("success", true);
+                    response.put("redirectUrl", redirectUrl);
+                    response.put("message", "Login exitoso desde dispositivo confiable");
+                } catch (Exception e) {
+                    response.put("success", false);
+                    response.put("message", "Error al procesar login");
+                }
+            } else {
+                // No confiable: Enviar código
+                String codigo = generarCodigo();
+                codigosVerificacion.put(correo, codigo);
+
+                try {
+                    enviarCorreoVerificacion(correo, codigo);
+                    response.put("success", true);
+                    response.put("message", "Código enviado a tu correo");
+                } catch (MessagingException e) {
+                    response.put("success", false);
+                    response.put("message", "Error al enviar el código de verificación");
+                    codigosVerificacion.remove(correo); // Limpiar si falla
+                }
             }
         } else {
             response.put("success", false);
@@ -235,8 +286,8 @@ public class LoginControl {
 
     // Enviar correo de verificación
     private void enviarCorreoVerificacion(String correoDestino, String codigo) throws MessagingException {
-        String remitente = "kbedonv@uteq.edu.ec";
-        String contraseniaRemitente = "gxvm oryp sexd nfqc";
+        String remitente = "keylabbv14@gmail.com";
+        String contraseniaRemitente = "xwfj dqql ejmu peib";
 
         Properties props = new Properties();
         props.put("mail.smtp.auth", "true");
@@ -261,8 +312,8 @@ public class LoginControl {
 
     // Enviar correo de reset con enlace
     private void enviarCorreoReset(String correoDestino, String token) throws MessagingException {
-        String remitente = "kbedonv@uteq.edu.ec";
-        String contraseniaRemitente = "gxvm oryp sexd nfqc";
+        String remitente = "keylabbv14@gmail.com";
+        String contraseniaRemitente = "xwfj dqql ejmu peib";
 
         Properties props = new Properties();
         props.put("mail.smtp.auth", "true");

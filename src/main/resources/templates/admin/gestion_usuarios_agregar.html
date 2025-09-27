@@ -130,12 +130,19 @@
 
     <div class="form-grupo">
         <label>Teléfono</label>
-        <input type="text" th:field="*{telefono}" required />
+        <input type="text" 
+                th:field="*{telefono}" 
+                required 
+                pattern="\d{10}" 
+                maxlength="10" 
+                title="El teléfono debe tener exactamente 10 dígitos." 
+                oninput="this.value=this.value.replace(/[^0-9]/g,'');" />
+        <small style="color: gray;">Debe ingresar exactamente 10 dígitos.</small>
     </div>
 
     <div class="form-grupo">
         <label>Rol</label>
-        <select th:field="*{rol.id}" required>
+        <select th:field="*{rol.id}" id="rolSelect" required>
         <option value="">Seleccione un rol</option>
         <option th:each="rol : ${roles}" 
                 th:value="${rol.id}" 
@@ -143,6 +150,16 @@
         </option>
         </select>
     </div>
+
+    <div class="form-grupo" id="direccionGroup" style="display:none;">
+        <label>Dirección</label>
+        <input type="text" name="direccion" id="direccionInput"/>
+      </div>
+
+      <div class="form-grupo" id="especialidadGroup" style="display:none;">
+        <label>Especialidad</label>
+        <input type="text" name="especialidad" id="especialidadInput"/>
+      </div>
 
     <div class="form-grupo">
         <button type="submit" class="dt-btn-agregar">Guardar usuario</button>
@@ -161,6 +178,45 @@
                 successAlert.style.display = 'none';
             }, 5000);
         }
+
+        const rolSelect = document.getElementById("rolSelect");
+        const direccionGroup = document.getElementById("direccionGroup");
+        const direccionInput = document.getElementById("direccionInput");
+        const especialidadGroup = document.getElementById("especialidadGroup");
+        const especialidadInput = document.getElementById("especialidadInput");
+        const usuarioForm = document.getElementById("usuarioForm");
+
+        rolSelect.addEventListener("change", function() {
+        const selectedText = rolSelect.options[rolSelect.selectedIndex].text;
+
+        if (selectedText === "Cliente") {
+            direccionGroup.style.display = "flex";
+            direccionInput.setAttribute("required", "true");
+
+            especialidadGroup.style.display = "none";
+            especialidadInput.removeAttribute("required");
+
+            usuarioForm.setAttribute("action", "/admin/guardar_cliente");
+
+        } else if (selectedText === "Abogado") {
+            especialidadGroup.style.display = "flex";
+            especialidadInput.setAttribute("required", "true");
+
+            direccionGroup.style.display = "none";
+            direccionInput.removeAttribute("required");
+
+            usuarioForm.setAttribute("action", "/admin/guardar_abogado");
+
+        } else {
+            direccionGroup.style.display = "none";
+            direccionInput.removeAttribute("required");
+
+            especialidadGroup.style.display = "none";
+            especialidadInput.removeAttribute("required");
+
+            usuarioForm.setAttribute("action", "/admin/guardar_usuario");
+        }
+        });
 
         // Validar confirmación de contraseña antes de enviar el formulario
         document.getElementById('usuarioForm').addEventListener('submit', function(e) {

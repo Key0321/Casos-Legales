@@ -280,35 +280,40 @@
     </div>
 
     <!-- Modal para agregar usuario involucrado -->
-    <div id="modal-add-user" class="modal">
-      <div class="contenido-modal">
-        <div class="cabecera-modal">
-          <h2>Agregar Persona Involucrada</h2>
-          <button class="cerrar-modal" aria-label="Cerrar"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="cuerpo-modal">
-          <form id="form-add-user" method="post" th:action="@{/abogado/agregar-usuario-proceso/{id}(id=${proceso.id})}">
-            <div class="form-grupo">
-              <label for="usuario-id">Seleccionar Usuario:</label>
-              <select id="usuario-id" name="usuarioId" required>
-                <option value="">Seleccione un usuario</option>
-                <option th:each="usuario : ${usuariosDisponibles}" 
-                        th:value="${usuario.id}" 
-                        th:text="${usuario.nombre + ' ' + usuario.apellido}"></option>
-              </select>
+  <div id="modal-add-user" class="modal">
+    <div class="contenido-modal">
+      <div class="cabecera-modal">
+        <h2>Agregar Persona Involucrada</h2>
+        <button class="cerrar-modal" aria-label="Cerrar" onclick="closeModal('modal-add-user')"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="cuerpo-modal">
+        <form id="form-add-user" method="post" th:action="@{/abogado/agregar-usuario-proceso/{id}(id=${proceso.id})}">
+          <div class="form-grupo">
+            <label>Filtrar por rol:</label>
+            <div class="filtro-botones">
+              <button type="button" class="btn-filtro active" data-filtro="todos">Todos</button>
+              <button type="button" class="btn-filtro" data-filtro="Abogado">Abogado</button>
+              <button type="button" class="btn-filtro" data-filtro="Cliente">Cliente</button>
             </div>
-            <div class="form-grupo">
-              <label for="es-principal">Responsable Principal:</label>
-              <input type="checkbox" id="es-principal" name="esResponsablePrincipal">
-            </div>
-            <div class="modal-acciones">
-              <button type="button" class="btn-cancelar" onclick="closeModal('modal-add-user')">Cancelar</button>
-              <button type="submit" class="btn-guardar">Agregar</button>
-            </div>
-          </form>
-        </div>
+          </div>
+          <div class="form-grupo">
+            <label for="usuario-id">Seleccionar Usuario:</label>
+            <select id="usuario-id" name="usuarioId" required>
+              <option value="">Seleccione un usuario</option>
+            </select>
+          </div>
+          <div class="form-grupo">
+            <label for="es-principal">Responsable Principal:</label>
+            <input type="checkbox" id="es-principal" name="esResponsablePrincipal">
+          </div>
+          <div class="modal-acciones">
+            <button type="button" class="btn-cancelar" onclick="closeModal('modal-add-user')">Cancelar</button>
+            <button type="submit" class="btn-guardar">Agregar</button>
+          </div>
+        </form>
       </div>
     </div>
+  </div>
 
     <!-- Modal para nuevo evento -->
     <div id="modal-evento" class="modal">
@@ -426,6 +431,7 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     });
 
+    
     // Obtener el ID del proceso
     const procesoId = parseInt(document.getElementById('proceso-id').value, 10);
     let eventosConEstado = [];
@@ -718,6 +724,7 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 
+   
     // Para setear nombre de documento al seleccionar archivo
     document.getElementById('archivo').addEventListener('change', (e) => {
         const file = e.target.files[0];
@@ -1008,6 +1015,74 @@ document.addEventListener('DOMContentLoaded', function() {
 window.addEventListener('beforeunload', disconnectWebSocket);
 </script>
 
+<!-- Filtro -->
+<script th:inline="javascript">
+  // Inicializar usuariosDisponibles desde Thymeleaf
+  const usuariosDisponibles = /*[[${usuariosDisponibles}]]*/ [];
+
+  // Depuración inicial: Verificar datos de usuariosDisponibles al cargar la página
+  console.log('Usuarios disponibles al cargar la página:', usuariosDisponibles);
+
+  // Filtrar usuarios en el modal
+  document.querySelectorAll('.btn-filtro').forEach(button => {
+    button.addEventListener('click', function() {
+      // Actualizar estilo de botones
+      document.querySelectorAll('.btn-filtro').forEach(btn => btn.classList.remove('active'));
+      this.classList.add('active');
+
+      const filtro = this.dataset.filtro;
+      const select = document.getElementById('usuario-id');
+
+      // Depuración: Verificar filtro seleccionado
+      console.log('Filtro seleccionado:', filtro);
+      console.log('Usuarios disponibles:', usuariosDisponibles);
+
+      // Limpiar opciones actuales
+      select.innerHTML = '<option value="">Seleccione un usuario</option>';
+
+      // Verificar si hay usuarios disponibles
+      if (!usuariosDisponibles || usuariosDisponibles.length === 0) {
+        console.warn('No hay usuarios disponibles para filtrar.');
+        select.innerHTML = '<option value="">No hay usuarios disponibles</option>';
+        return;
+      }
+
+      // Filtrar usuarios según el rol (ignorando mayúsculas/minúsculas)
+      const usuariosFiltrados = filtro === 'todos'
+        ? usuariosDisponibles
+        : usuariosDisponibles.filter(usuario => {
+            const rolNombre = usuario.rolNombre ? usuario.rolNombre.toLowerCase() : '';
+            console.log('Usuario:', usuario.nombre, 'Rol:', rolNombre); // Depuración
+            return rolNombre === filtro.toLowerCase();
+          });
+
+      // Depuración: Verificar usuarios filtrados
+      console.log('Usuarios filtrados:', usuariosFiltrados);
+
+      // Agregar opciones filtradas
+      if (usuariosFiltrados.length === 0) {
+        select.innerHTML = '<option value="">No hay usuarios con el rol seleccionado</option>';
+      } else {
+        usuariosFiltrados.forEach(usuario => {
+          const option = document.createElement('option');
+          option.value = usuario.id;
+          option.textContent = `${usuario.nombre} ${usuario.apellido} - ${usuario.rolNombre || 'Sin rol'}`;
+          option.dataset.rol = usuario.rolNombre || 'sin-rol';
+          select.appendChild(option);
+        });
+      }
+    });
+  });
+
+  // Simular clic en el botón "Todos" al abrir el modal para inicializar la lista
+  window.openAddUserModal = function() {
+    document.getElementById('modal-add-user').style.display = 'flex';
+    // Simular clic en el botón "Todos" para cargar la lista inicial
+    document.querySelector('.btn-filtro[data-filtro="todos"]').click();
+  };
+</script>
+
+<!-- Cerrar sesion -->
 <script th:inline="javascript">
     // Mostrar/ocultar menú de perfil
     document.querySelector('.item-perfil').addEventListener('click', function(e) {

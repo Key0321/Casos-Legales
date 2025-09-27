@@ -133,161 +133,165 @@
   </div>
 
   <script>
-    const { createApp } = Vue;
+const { createApp } = Vue;
 
-    createApp({
-      data() {
-        return {
-          correo: '',
-          contrasenia: '',
-          codigoVerificacion: '',
-          mostrarVerificacion: false,
-          mostrarResetPassword: false,
-          mostrarNuevaContrasenia: false,
-          correoReset: '',
-          nuevaContrasenia: '',
-          confirmarContrasenia: '',
-          cargandoLogin: false,
-          cargandoReset: false,
-          resetEnviado: false,
-          token: '',
-          error: ''
-        };
-      },
-      mounted() {
-        // Verificar si hay un token en la URL para mostrar el paso de nueva contraseña
-        const urlParams = new URLSearchParams(window.location.search);
-        this.token = urlParams.get('token');
-        if (this.token) {
-          this.mostrarNuevaContrasenia = true;
-          this.mostrarVerificacion = false;
-          this.mostrarResetPassword = false;
-          // Obtener el correo asociado al token (opcional, si lo necesitas)
-          this.verificarToken();
+createApp({
+  data() {
+    return {
+      correo: '',
+      contrasenia: '',
+      codigoVerificacion: '',
+      mostrarVerificacion: false,
+      mostrarResetPassword: false,
+      mostrarNuevaContrasenia: false,
+      correoReset: '',
+      nuevaContrasenia: '',
+      confirmarContrasenia: '',
+      cargandoLogin: false,
+      cargandoReset: false,
+      resetEnviado: false,
+      token: '',
+      error: ''
+    };
+  },
+  mounted() {
+    // Verificar si hay un token en la URL para mostrar el paso de nueva contraseña
+    const urlParams = new URLSearchParams(window.location.search);
+    this.token = urlParams.get('token');
+    if (this.token) {
+      this.mostrarNuevaContrasenia = true;
+      this.mostrarVerificacion = false;
+      this.mostrarResetPassword = false;
+      this.verificarToken();
+    }
+  },
+  methods: {
+    async iniciarSesion() {
+      this.error = '';
+      this.cargandoLogin = true;
+      try {
+        const response = await axios.post('/api/login/verificar-credenciales', {
+          correo: this.correo,
+          contrasenia: this.contrasenia
+        });
+        if (response.data.success) {
+          if (response.data.redirectUrl) {
+            // IP confiada: Redirigir directamente
+            window.location.href = response.data.redirectUrl;
+          } else {
+            // Enviar código: Mostrar verificación
+            this.mostrarVerificacion = true;
+          }
+        } else {
+          this.error = response.data.message || 'Correo o contraseña incorrectos';
         }
-      },
-      methods: {
-        async iniciarSesion() {
-          this.error = '';
-          this.cargandoLogin = true;
-          try {
-            const response = await axios.post('/api/login/verificar-credenciales', {
-              correo: this.correo,
-              contrasenia: this.contrasenia
-            });
-            if (response.data.success) {
-              this.mostrarVerificacion = true;
-            } else {
-              this.error = response.data.message || 'Correo o contraseña incorrectos';
-            }
-          } catch (err) {
-            this.error = 'Error al procesar la solicitud';
-          } finally {
-            this.cargandoLogin = false;
-          }
-        },
-        async verificarCodigo() {
-          this.error = '';
-          try {
-            const response = await axios.post('/api/login/verificar-codigo', {
-              correo: this.correo,
-              codigo: this.codigoVerificacion
-            });
-            if (response.data.success) {
-              window.location.href = response.data.redirectUrl;
-            } else {
-              this.error = response.data.message || 'Código incorrecto';
-            }
-          } catch (err) {
-            this.error = 'Error al verificar el código';
-          }
-        },
-        iniciarResetPassword() {
-          this.mostrarResetPassword = true;
-          this.mostrarVerificacion = false;
-          this.mostrarNuevaContrasenia = false;
-          this.error = '';
-          this.correoReset = '';
-          this.resetEnviado = false;
-        },
-        async enviarResetPassword() {
-          this.error = '';
-          this.cargandoReset = true;
-          try {
-            const response = await axios.post('/api/login/reset-password', {
-              correo: this.correoReset
-            });
-            if (response.data.success) {
-              this.resetEnviado = true;
-              this.error = 'Se ha enviado un enlace de restablecimiento a tu correo.';
-            } else {
-              this.error = response.data.message || 'Correo no registrado';
-            }
-          } catch (err) {
-            this.error = 'Error al procesar la solicitud';
-          } finally {
-            this.cargandoReset = false;
-          }
-        },
-        async verificarToken() {
-          this.error = '';
-          try {
-            const response = await axios.get(`/api/login/verificar-token?token=${this.token}`);
-            if (response.data.success) {
-              this.correoReset = response.data.correo; 
-            } else {
-              this.error = 'Enlace inválido o expirado';
-              this.volverInicio();
-            }
-          } catch (err) {
-            this.error = 'Error al verificar el enlace';
-            this.volverInicio();
-          }
-        },
-        async restablecerContrasenia() {
-          this.error = '';
-          if (this.nuevaContrasenia !== this.confirmarContrasenia) {
-            this.error = 'Las contraseñas no coinciden';
-            return;
-          }
-          this.cargandoReset = true;
-          try {
-            const response = await axios.post('/api/login/confirm-reset', {
-              token: this.token,
-              nuevaContrasenia: this.nuevaContrasenia
-            });
-            if (response.data.success) {
-              this.error = 'Contraseña actualizada exitosamente';
-              this.volverInicio();
-            } else {
-              this.error = response.data.message || 'Error al restablecer la contraseña';
-            }
-          } catch (err) {
-            this.error = 'Error al procesar la solicitud';
-          } finally {
-            this.cargandoReset = false;
-          }
-        },
-        volverInicio() {
-          this.mostrarVerificacion = false;
-          this.mostrarResetPassword = false;
-          this.mostrarNuevaContrasenia = false;
-          this.correo = '';
-          this.contrasenia = '';
-          this.codigoVerificacion = '';
-          this.correoReset = '';
-          this.nuevaContrasenia = '';
-          this.confirmarContrasenia = '';
-          this.error = '';
-          this.resetEnviado = false;
-          this.cargandoLogin = false;
-          this.cargandoReset = false;
-          this.token = '';
-          // Limpiar el parámetro token de la URL
-          window.history.replaceState({}, document.title, window.location.pathname);
-        }
+      } catch (err) {
+        this.error = 'Error al procesar la solicitud';
+      } finally {
+        this.cargandoLogin = false;
       }
-    }).mount('#app');
-  </script>
+    },
+    async verificarCodigo() {
+      this.error = '';
+      try {
+        const response = await axios.post('/api/login/verificar-codigo', {
+          correo: this.correo,
+          codigo: this.codigoVerificacion
+        });
+        if (response.data.success) {
+          window.location.href = response.data.redirectUrl;
+        } else {
+          this.error = response.data.message || 'Código incorrecto';
+        }
+      } catch (err) {
+        this.error = 'Error al verificar el código';
+      }
+    },
+    iniciarResetPassword() {
+      this.mostrarResetPassword = true;
+      this.mostrarVerificacion = false;
+      this.mostrarNuevaContrasenia = false;
+      this.error = '';
+      this.correoReset = '';
+      this.resetEnviado = false;
+    },
+    async enviarResetPassword() {
+      this.error = '';
+      this.cargandoReset = true;
+      try {
+        const response = await axios.post('/api/login/reset-password', {
+          correo: this.correoReset
+        });
+        if (response.data.success) {
+          this.resetEnviado = true;
+          this.error = 'Se ha enviado un enlace de restablecimiento a tu correo.';
+        } else {
+          this.error = response.data.message || 'Correo no registrado';
+        }
+      } catch (err) {
+        this.error = 'Error al procesar la solicitud';
+      } finally {
+        this.cargandoReset = false;
+      }
+    },
+    async verificarToken() {
+      this.error = '';
+      try {
+        const response = await axios.get(`/api/login/verificar-token?token=${this.token}`);
+        if (response.data.success) {
+          this.correoReset = response.data.correo;
+        } else {
+          this.error = 'Enlace inválido o expirado';
+          this.volverInicio();
+        }
+      } catch (err) {
+        this.error = 'Error al verificar el enlace';
+        this.volverInicio();
+      }
+    },
+    async restablecerContrasenia() {
+      this.error = '';
+      if (this.nuevaContrasenia !== this.confirmarContrasenia) {
+        this.error = 'Las contraseñas no coinciden';
+        return;
+      }
+      this.cargandoReset = true;
+      try {
+        const response = await axios.post('/api/login/confirm-reset', {
+          token: this.token,
+          nuevaContrasenia: this.nuevaContrasenia
+        });
+        if (response.data.success) {
+          this.error = 'Contraseña actualizada exitosamente';
+          this.volverInicio();
+        } else {
+          this.error = response.data.message || 'Error al restablecer la contraseña';
+        }
+      } catch (err) {
+        this.error = 'Error al procesar la solicitud';
+      } finally {
+        this.cargandoReset = false;
+      }
+    },
+    volverInicio() {
+      this.mostrarVerificacion = false;
+      this.mostrarResetPassword = false;
+      this.mostrarNuevaContrasenia = false;
+      this.correo = '';
+      this.contrasenia = '';
+      this.codigoVerificacion = '';
+      this.correoReset = '';
+      this.nuevaContrasenia = '';
+      this.confirmarContrasenia = '';
+      this.error = '';
+      this.resetEnviado = false;
+      this.cargandoLogin = false;
+      this.cargandoReset = false;
+      this.token = '';
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }
+}).mount('#app');
+</script>
 </body>
 </html>

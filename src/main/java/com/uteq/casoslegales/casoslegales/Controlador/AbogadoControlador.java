@@ -80,21 +80,22 @@ public class AbogadoControlador {
     public String guardarCliente(
             @ModelAttribute Usuario usuario,
             @RequestParam("especialidad") String especialidad,
-            @RequestParam("confirmarContrasenia") String confirmarContrasenia,
             HttpSession session,
             RedirectAttributes redirectAttributes) {
 
         Usuario usuarioSesion = (Usuario) session.getAttribute("usuario");
 
         try {
-            if (!usuario.getContrasenia().equals(confirmarContrasenia)) {
-                redirectAttributes.addFlashAttribute("error", "Las contraseñas no coinciden");
-                return "redirect:/admin/gestion_abogados_agregar";
-            }
-
             LocalDateTime fechaActual = LocalDateTime.now();
 
-            String contraseniaEncriptada = passwordEncoder.encode(usuario.getContrasenia());
+            // Generar contraseña aleatoria
+            String nuevaContrasenia = usuarioServicio.generarContraseniaAleatoria();
+            while (usuarioServicio.existeContrasenia(nuevaContrasenia)) {
+                nuevaContrasenia = usuarioServicio.generarContraseniaAleatoria();
+            }
+
+            // Encriptar la contraseña
+            String contraseniaEncriptada = passwordEncoder.encode(nuevaContrasenia);
             usuario.setContrasenia(contraseniaEncriptada);
 
             usuario.setCreadoPor(usuarioSesion);

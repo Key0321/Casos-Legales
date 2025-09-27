@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mis casos</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/admin/admin_menu.css">
   <link rel="stylesheet" href="/css/admin/gestion_usuarios.css">
 </head>
 <body>
@@ -134,7 +135,6 @@
                     <th>Tipo ID</th>
                     <th>Identificación</th>
                     <th>Correo</th>
-                    <th>Contraseña</th>
                     <th>Teléfono</th>
                     <th>Rol</th>
                     <th>Creado Por</th>
@@ -166,7 +166,6 @@
                     <td th:text="${usuario.tipoIdentificacion}"></td>
                     <td th:text="${usuario.identificacion}"></td>
                     <td th:text="${usuario.correo}"></td>
-                    <td th:text="${usuario.contrasenia}"></td>
                     <td th:text="${usuario.telefono}"></td>
                     <td th:text="${usuario.rol != null ? usuario.rol.nombre : '—'}"></td>
                     <td th:text="${usuario.creadoPor != null ? usuario.creadoPor.nombre + ' ' + usuario.creadoPor.apellido : '—'}"></td>

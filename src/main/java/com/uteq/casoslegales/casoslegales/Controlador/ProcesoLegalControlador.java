@@ -1,5 +1,6 @@
 package com.uteq.casoslegales.casoslegales.Controlador;
 
+import com.uteq.casoslegales.casoslegales.DTOs.UsuarioDTO;
 import com.uteq.casoslegales.casoslegales.Modelo.AudienciaEvento;
 import com.uteq.casoslegales.casoslegales.Modelo.Chat;
 import com.uteq.casoslegales.casoslegales.Modelo.ChatMensaje;
@@ -220,7 +221,7 @@ public class ProcesoLegalControlador {
         List<ProcesoUsuario> usuariosInvolucrados = procesoUsuarioServicio.listarPorProcesoId(proceso.getId());
         List<AudienciaEvento> eventos = audienciaEventoServicio.listarPorProcesoId(proceso.getId());
         Map<String, List<Documento>> documentosAgrupados = documentoServicio.obtenerAgrupadosPorFecha(proceso.getId());
-        List<Usuario> usuariosDisponibles = usuarioServicio.listarNoInvolucradosEnProceso(proceso.getId());
+        List<UsuarioDTO> usuariosDisponibles = usuarioServicio.listarNoInvolucradosEnProceso(proceso.getId());
         List<EstadoProceso> estadosDisponibles = estadoProcesoServicio.listarTodos();
 
         model.addAttribute("proceso", proceso);
@@ -236,7 +237,6 @@ public class ProcesoLegalControlador {
         return "abogado".equalsIgnoreCase(usuario.getRol().getNombre()) ? 
                "abogado/proceso_legal_contenido" : "cliente/proceso_legal_contenido";
     }
-
 
     private Chat crearNuevoChat(ProcesoLegal proceso, Usuario usuario) {
         Chat chat = new Chat();

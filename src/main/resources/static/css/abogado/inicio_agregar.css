@@ -1,13 +1,3 @@
-:root {
-    --fuente-principal: 'Domine', serif;
-    --fuente-titulo: 'Big Shoulders Stencil', sans-serif;
-    --color-primario: #D4AF37;
-    --color-secundario: #0B1F3A;
-    --color-blanco: #ffffff;
-    --color-fondo: #F6F6FE;
-    --color-texto: #525252;
-    --color-fondo-botones: #F0F0EB;
-  }
 body {
   margin: 0;
   font-family: 'Inter', sans-serif;

@@ -134,27 +134,6 @@
       </div>
 
       <div class="form-grupo">
-        <label>Contraseña</label>
-        <div class="password-container">
-            <input type="password" th:field="*{contrasenia}" id="contraseña" required />
-            <button type="button" class="toggle-password" onclick="togglePassword('contraseña')">
-                👁️
-            </button>
-        </div>
-      </div>
-
-      <div class="form-grupo">
-        <label>Confirmar Contraseña</label>
-        <div class="password-container">
-            <input type="password" id="confirmarContrasenia" name="confirmarContrasenia" required />
-            <button type="button" class="toggle-password" onclick="togglePassword('confirmarContrasenia')">
-                👁️
-            </button>
-        </div>
-        <small id="passwordError" style="color: red; display: none;">Las contraseñas no coinciden</small>
-      </div>
-
-      <div class="form-grupo">
         <label>Teléfono</label>
         <input type="text" th:field="*{telefono}" required />
       </div>

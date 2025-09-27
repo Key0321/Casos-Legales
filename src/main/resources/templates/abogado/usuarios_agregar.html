@@ -101,8 +101,15 @@
 
       <div class="form-grupo">
         <label>Teléfono</label>
-        <input type="text" th:field="*{telefono}" required />
-      </div>
+        <input type="text" 
+                th:field="*{telefono}" 
+                required 
+                pattern="\d{10}" 
+                maxlength="10" 
+                title="El teléfono debe tener exactamente 10 dígitos." 
+                oninput="this.value=this.value.replace(/[^0-9]/g,'');" />
+        <small style="color: gray;">Debe ingresar exactamente 10 dígitos.</small>
+    </div>
 
       <div class="form-grupo">
         <label>Rol</label>

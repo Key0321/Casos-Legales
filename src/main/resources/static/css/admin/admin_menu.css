@@ -1,25 +1,33 @@
+@import url('https://fonts.googleapis.com/css2?family=Lato&family=Merriweather:wght@700&display=swap');
 :root {
-    --fuente-principal: 'Domine', serif;
-    --fuente-titulo: 'Big Shoulders Stencil', sans-serif;
+    --fuente-principal: 'Lato', sans-serif;
+    --fuente-titulo: 'Merriweather', serif;
     --color-primario: #D4AF37;
     --color-secundario: #0B1F3A;
     --color-blanco: #ffffff;
     --color-fondo: #F6F6FE;
     --color-texto: #525252;
     --color-fondo-botones: #F0F0EB;
+    --color-texto-secundario: #65676B;
+    --color-borde: #E4E6EB;
+    --color-hover: #F2F2F2;
+    --color-mensaje-propio: #1877F2;
+    --color-mensaje-ajeno: #E4E6EB;
+    --color-online: #31A24C;
+    --color-calendario-evento: #FF6B6B;
   }
 body {
   margin: 0;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--fuente-principal);
   background-color: var(--color-fondo);
-  color: #333;
+  color: var(--color-texto);
 }
 .menu {
   position: fixed;
   top: 0;
   left: 0;
   height: 100vh;
-  width: 200px; /* Más ancho para texto */
+  width: 200px;
   background-color: var(--color-secundario);
   display: flex;
   flex-direction: column;
@@ -27,16 +35,20 @@ body {
   padding-top: 10px;
 }
 
-.menu-logo {
-  padding: 10px;
-  display: flex;
-  justify-content: center;
+.menu-logo img { 
+  width: 50%; 
+  height: auto; 
+  cursor: pointer; 
+  display: block; 
+  margin: 0 auto;
+  margin-bottom: 20px; 
+  padding: 5px;
 }
 
-.menu-logo img {
-  max-width: 60%;
-  height: auto;
-  cursor: pointer;
+.menu-logo img { 
+  width: 50%; 
+  height: auto; 
+  cursor: pointer; 
 }
 
 .menu-item {

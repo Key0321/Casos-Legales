@@ -1,10 +1,13 @@
+@import url('https://fonts.googleapis.com/css2?family=Lato&family=Merriweather:wght@700&display=swap');
 :root {
-    --fuente-principal: 'Inter', sans-serif;
+    --fuente-principal: 'Lato', sans-serif;
+    --fuente-titulo: 'Merriweather', serif;
     --color-primario: #D4AF37;
     --color-secundario: #0B1F3A;
     --color-blanco: #ffffff;
-    --color-fondo: #F0F2F5;
-    --color-texto: #1C1E21;
+    --color-fondo: #F6F6FE;
+    --color-texto: #525252;
+    --color-fondo-botones: #F0F0EB;
     --color-texto-secundario: #65676B;
     --color-borde: #E4E6EB;
     --color-hover: #F2F2F2;
@@ -12,7 +15,7 @@
     --color-mensaje-ajeno: #E4E6EB;
     --color-online: #31A24C;
     --color-calendario-evento: #FF6B6B;
-}
+  }
 
 /* Reset y base */
 * { box-sizing: border-box; margin: 0; padding: 0; }

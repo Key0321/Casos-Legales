@@ -11,6 +11,7 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import javax.mail.*;
 
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -21,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import com.uteq.casoslegales.casoslegales.DTOs.UsuarioDTO;
 import com.uteq.casoslegales.casoslegales.Modelo.Usuario;
 import com.uteq.casoslegales.casoslegales.Repositorio.ProcesoUsuarioRepositorio;
 import com.uteq.casoslegales.casoslegales.Repositorio.UsuarioRepo;
@@ -61,19 +63,22 @@ public class UsuarioServicio {
         return usuarioRepo.findByCorreo(email);
     }
 
-    @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)
-    public List<Usuario> listarNoInvolucradosEnProceso(Long procesoId) {
-        // Obtener IDs de usuarios involucrados en el proceso
+    @Transactional(readOnly = true)
+    public List<UsuarioDTO> listarNoInvolucradosEnProceso(Long procesoId) {
         List<Long> usuariosInvolucradosIds = procesoUsuarioRepositorio
                 .findByProcesoIdAndEliminadoPorIsNull(procesoId)
                 .stream()
                 .map(pu -> pu.getUsuario().getId())
                 .collect(Collectors.toList());
 
-        // Listar todos los usuarios que no estén en la lista de involucrados
         return usuarioRepo.findAll()
                 .stream()
                 .filter(usuario -> !usuariosInvolucradosIds.contains(usuario.getId()))
+                .map(usuario -> {
+                    Hibernate.initialize(usuario.getRol());
+                    String rolNombre = usuario.getRol() != null ? usuario.getRol().getNombre() : "Sin rol";
+                    return new UsuarioDTO(usuario.getId(), usuario.getNombre(), usuario.getApellido(), rolNombre);
+                })
                 .collect(Collectors.toList());
     }
 

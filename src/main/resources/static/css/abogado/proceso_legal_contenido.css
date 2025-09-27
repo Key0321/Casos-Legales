@@ -987,3 +987,28 @@
   gap: 8px;
 }
 
+.filtro-botones {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.btn-filtro {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #f9f9f9;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.btn-filtro:hover {
+  background-color: #e0e0e0;
+}
+
+.btn-filtro.active {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+}

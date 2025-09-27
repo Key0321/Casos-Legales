@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -18,6 +19,9 @@ public interface UsuarioRepo extends JpaRepository<Usuario, Long>, JpaSpecificat
     @Query("SELECT u.id, u.identificacion, CONCAT(u.nombre, ' ', u.apellido) " +
        "FROM Usuario u ")
     List<Object[]> listarUsuarioCampos();
+
+    @Query("SELECT u FROM Usuario u JOIN FETCH u.rol r WHERE u.fechaEliminacion IS NULL ORDER BY r.nombre ASC")
+    List<Usuario> findAll();
 
     @Query("SELECT u FROM Usuario u WHERE u.creadoPor.id = :creadorId AND " +
            "(LOWER(u.nombre) LIKE LOWER(CONCAT('%', :busqueda, '%')) OR " +
