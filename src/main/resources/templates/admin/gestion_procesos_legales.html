@@ -176,16 +176,16 @@
     <!-- PAGINACIÓN -->
     <div class="paginacion" th:if="${totalPaginas > 0}">
       <a th:if="${paginaActual > 0}"
-        th:href="@{/admin/gestion_procesos_legales(pagina=${paginaActual - 1}, tamano=10)}">&laquo; Anterior</a>
+        th:href="@{/admin/gestion_procesos_legales(pagina=${paginaActual - 1}, tamano=7)}">&laquo; Anterior</a>
 
       <span th:each="i : ${#numbers.sequence(0, totalPaginas - 1)}">
-          <a th:href="@{/admin/gestion_procesos_legales(pagina=${i}, tamano=10)}"
+          <a th:href="@{/admin/gestion_procesos_legales(pagina=${i}, tamano=7)}"
             th:text="${i + 1}"
             th:classappend="${i == paginaActual} ? 'activo' : ''"></a>
       </span>
 
       <a th:if="${paginaActual < totalPaginas - 1}"
-        th:href="@{/admin/gestion_procesos_legales(pagina=${paginaActual + 1}, tamano=10)}">Siguiente &raquo;</a>
+        th:href="@{/admin/gestion_procesos_legales(pagina=${paginaActual + 1}, tamano=7)}">Siguiente &raquo;</a>
   </div>
 
 
