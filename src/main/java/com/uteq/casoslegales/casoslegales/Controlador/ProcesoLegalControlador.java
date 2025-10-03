@@ -264,8 +264,16 @@ public class ProcesoLegalControlador {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Usuario no autenticado");
         }
 
+        Optional<ProcesoLegal> procesoOpt = procesoServicio.obtenerPorId(id);
+        if (procesoOpt.isEmpty()) {
+            logger.warn("Proceso con ID {} no encontrado", id);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Proceso no encontrado");
+        }
+        ProcesoLegal proceso = procesoOpt.get();
+
         if (!"admin".equalsIgnoreCase(usuario.getRol().getNombre()) &&
-            !procesoUsuarioServicio.estaUsuarioInvolucrado(id, usuario.getId())) {
+            !procesoUsuarioServicio.estaUsuarioInvolucrado(id, usuario.getId()) &&
+            !(proceso.getCliente() != null && proceso.getCliente().getUsuario().getId().equals(usuario.getId()))) {
             logger.warn("Usuario {} no tiene acceso al proceso con ID: {}", usuario.getId(), id);
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Acceso denegado");
         }
@@ -542,14 +550,20 @@ public class ProcesoLegalControlador {
         if (usuario == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Usuario no autenticado");
         }
-        if (!"admin".equalsIgnoreCase(usuario.getRol().getNombre()) &&
-            !procesoUsuarioServicio.estaUsuarioInvolucrado(procesoId, usuario.getId())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Acceso denegado");
-        }
+
         Optional<ProcesoLegal> procesoOpt = procesoServicio.obtenerPorId(procesoId);
-        if (procesoOpt.isEmpty()) {
+         if (procesoOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Proceso no encontrado");
         }
+        
+        if (!"admin".equalsIgnoreCase(usuario.getRol().getNombre()) &&
+            !procesoUsuarioServicio.estaUsuarioInvolucrado(procesoId, usuario.getId()) &&
+            !(procesoOpt.get().getCliente() != null && procesoOpt.get().getCliente().getUsuario().getId().equals(usuario.getId()))) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Acceso denegado");
+        }
+
+        
+       
         try {
             String ruta = documentoServicio.guardarArchivo(archivo);
             Documento doc = new Documento();
