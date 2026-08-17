@@ -211,6 +211,7 @@ public class LoginControl {
                 response.put("success", true);
                 response.put("message", "Enlace de restablecimiento enviado a tu correo");
             } catch (MessagingException e) {
+                e.printStackTrace();
                 response.put("success", false);
                 response.put("message", "Error al enviar el enlace de restablecimiento");
             }
@@ -287,7 +288,7 @@ public class LoginControl {
     // Enviar correo de verificación
     private void enviarCorreoVerificacion(String correoDestino, String codigo) throws MessagingException {
         String remitente = "keylabbv14@gmail.com";
-        String contraseniaRemitente = "xwfj dqql ejmu peib";
+        String contraseniaRemitente = "nkhk mzet slsv tpxj";
 
         Properties props = new Properties();
         props.put("mail.smtp.auth", "true");
@@ -313,7 +314,7 @@ public class LoginControl {
     // Enviar correo de reset con enlace
     private void enviarCorreoReset(String correoDestino, String token) throws MessagingException {
         String remitente = "keylabbv14@gmail.com";
-        String contraseniaRemitente = "xwfj dqql ejmu peib";
+        String contraseniaRemitente = "nkhk mzet slsv tpxj";
 
         Properties props = new Properties();
         props.put("mail.smtp.auth", "true");
